@@ -43,7 +43,6 @@ public class FileChecker {
                     }
                 }
 
-                // Передаем переменные в другой класс
                 Calculator processor = new Calculator(dollarCourse, rubleCourse, inputString);
                 processor.processExchange();
             } catch (FileNotFoundException e) {
