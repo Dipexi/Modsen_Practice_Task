@@ -5,61 +5,64 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileChecker {
-    public static void main(String[] args) {
-        String folderPath = "C:/";
-        String fileName = "exchange rate.txt";
+    private static final String folderPath = "C:/";
+    private static final String fileName = "exchange rate.txt";
+    private static final String regexDollar = "^\\$(\\d+(\\.\\d+)?)$";
+    private static final String regexRuble = "^\\р(\\d+(\\.\\d+)?)$";
+    private static final String exceptionDollarLine = "Invalid dollar line: ";
+    private static final String exceptionRubleLine = "Курс рубля: ";
+    private static final String courseDollar = "Курс доллара: ";
+    private static final String courseRuble = "Invalid ruble line: ";
+    private static final String existenceVerificationErrorMassage = "File does not exist.";
 
-        if (isFileExists(folderPath, fileName)) {
-            System.out.println("File exists!");
+    public void processFile(String inputString) {
+        double dollarCourse = 0;
+        double rubleCourse = 0;
+        String fileDollarLine;
+        String fileRubleLine;
 
-            try (Scanner scanner = new Scanner(new File(folderPath, fileName))) {
-                double dollarCourse = 0;
-                double rubleCourse = 0;
-                String inputString = "";
+        if (!isFileExists(folderPath, fileName)) {
+            System.out.println(existenceVerificationErrorMassage);
+            System.exit(0);
+        }
 
+        try (Scanner scanner = new Scanner(new File(folderPath, fileName))) {
+            if (scanner.hasNextLine()) {
+                fileDollarLine = scanner.nextLine();
+                dollarCourse = getValueFromDollarLine(fileDollarLine, regexDollar);
 
-                if (scanner.hasNextLine()) {
-                    String line1 = scanner.nextLine();
-                    dollarCourse = getValueFromDollarLine(line1);
-
-                    Scanner scannerString = new Scanner(System.in);
-                    System.out.print("Введите строку: ");
-                    inputString = scannerString.nextLine();
-
-                    if (dollarCourse != -1) {
-                        System.out.println("Курс доллара: " + dollarCourse);
-                    } else {
-                        System.out.println("Invalid dollar line: " + line1);
-                    }
+                if (dollarCourse != -1) {
+                    System.out.println(courseDollar + dollarCourse);
+                } else {
+                    System.out.println(exceptionDollarLine + fileDollarLine);
                 }
-
-                if (scanner.hasNextLine()) {
-                    String line2 = scanner.nextLine();
-                    rubleCourse = getValueFromRubleLine(line2);
-                    if (rubleCourse != -1) {
-                        System.out.println("Курс рубля: " + rubleCourse);
-                    } else {
-                        System.out.println("Invalid ruble line: " + line2);
-                    }
-                }
-
-                Calculator processor = new Calculator(dollarCourse, rubleCourse, inputString);
-                processor.processExchange();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
             }
-        } else {
-            System.out.println("File does not exist.");
+
+            if (scanner.hasNextLine()) {
+                fileRubleLine = scanner.nextLine();
+                rubleCourse = getValueFromRubleLine(fileRubleLine, regexRuble);
+
+                if (rubleCourse != -1) {
+                    System.out.println(exceptionRubleLine + rubleCourse);
+                } else {
+                    System.out.println(courseRuble + fileRubleLine);
+                }
+            }
+
+            Calculator processor = new Calculator(dollarCourse, rubleCourse, inputString);
+            processor.processExchange();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
-    private static boolean isFileExists(String folderPath, String fileName) {
+    private boolean isFileExists(String folderPath, String fileName) {
         File file = new File(folderPath, fileName);
         return file.exists();
     }
 
-    private static double getValueFromDollarLine(String line) {
-        Pattern pattern = Pattern.compile("^\\$(\\d+(\\.\\d+)?)$");
+    private double getValueFromDollarLine(String line, String regexDollar) {
+        Pattern pattern = Pattern.compile(regexDollar);
         Matcher matcher = pattern.matcher(line);
         if (matcher.matches()) {
             return Double.parseDouble(matcher.group(1));
@@ -68,8 +71,8 @@ public class FileChecker {
         }
     }
 
-    private static double getValueFromRubleLine(String line) {
-        Pattern pattern = Pattern.compile("^\\р(\\d+(\\.\\d+)?)$");
+    private double getValueFromRubleLine(String line, String regexRuble) {
+        Pattern pattern = Pattern.compile(regexRuble);
         Matcher matcher = pattern.matcher(line);
         if (matcher.matches()) {
             return Double.parseDouble(matcher.group(1));
